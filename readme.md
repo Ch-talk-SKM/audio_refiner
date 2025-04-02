@@ -14,6 +14,7 @@
   - 다중 화자 대화에서 화자별 구간 자동 태깅
   - 화자별 Whisper ASR까지 연결해 최종 자막/스크립트까지 생성
   - [main_custom_diarization.py](./main_custom_diarization.py)
+  - [readme_custom_diarization.md](./readme_custom_diarization.md)
 
 ---
 
