@@ -43,7 +43,7 @@ python main_separation.py mixed_audio.wav clean_voice.wav
 
 ## 🚀 현재 구현된 기능: 화자 분할(Speaker Diarization)
 
-**`main_custom_diarization.py`** 스크립트를 통해 **화자 구간 분리**와 **자동 음성 인식(ASR)**을 한 번에 수행할 수 있습니다.
+**`main_custom_diarization.py`** 스크립트를 통해 **화자 구간 분리**와 **자동 음성 인식(ASR)**을 한 번에 수행할 수 있습니다. [readme_custom_diarization.md](./readme_custom_diarization.md)
 
 ### 📌 주요 특징
 
