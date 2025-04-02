@@ -2,8 +2,6 @@
 
 **AudioRefinery**는 유튜브 및 팟캐스트에서 수집한 오디오 데이터를 Conversational AI 시스템을 위한 고품질 학습 DB로 정제하기 위한 **올인원 파이프라인**입니다.
 
-현재 **배경 음악 제거** 기능이 구현되어 있으며, 추가로 **화자 분할**, **음성 구간 검출(VAD)**, **오디오 업스케일링** 기능이 구현될 예정입니다.
-
 ---
 
 ## ⚙️ 기능 구성 (Roadmap)
@@ -12,17 +10,10 @@
   - Hybrid Demucs 모델로 음성+배경음악 혼합 오디오에서 배경 음악 제거
   - [main_separation.py](./main_separation.py)
 
-- ⬜ **(2) Speaker Diarization** (*To-Do*)
-  - 다중 화자 대화에서 화자별 구간 자동 태깅 (Duplex 환경 최적화)
-  - 화자별 학습 데이터 구축 지원
-
-- ⬜ **(3) Voice Activity Detection (VAD)** (*To-Do*)
-  - 오디오에서 음성 구간만 검출하여 무음·배경 음악만 있는 구간 제외
-  - 데이터 정제 효율성 극대화
-
-- ⬜ **(4) 오디오 품질 업스케일링** (*To-Do*)
-  - 저음질 오디오 데이터의 품질 향상 (명료도 향상, 고주파 성분 복원 등)
-  - 최적의 오디오 품질로 데이터 활용성 강화
+- ✅ **(2) Speaker Diarization** (*구현 완료*)
+  - 다중 화자 대화에서 화자별 구간 자동 태깅
+  - 화자별 Whisper ASR까지 연결해 최종 자막/스크립트까지 생성
+  - [main_custom_diarization.py](./main_custom_diarization.py)
 
 ---
 
@@ -47,11 +38,51 @@ python main_separation.py mixed_audio.wav clean_voice.wav
 - PyTorch 1.12+
 - torchaudio 0.12+ (Hybrid Demucs 지원)
 
+---
 
-### ✅ 지원 환경
+## 🚀 현재 구현된 기능: 화자 분할(Speaker Diarization)
 
-- GPU (CUDA) 환경 권장
-- CPU에서도 동작하지만 처리 시간이 길어질 수 있습니다.
+**`main_custom_diarization.py`** 스크립트를 통해 **화자 구간 분리**와 **자동 음성 인식(ASR)**을 한 번에 수행할 수 있습니다.
+
+### 📌 주요 특징
+
+- **다중 임베딩(Multi-model Embedding) + Fusion**  
+  - Pyannote, SpeechBrain 등 **여러 스피커 임베딩 모델**을 동시에 활용  
+  - 스코어(유사도) 기반 평균화, 또는 피처(벡터) 레벨 합치기 등 **유연한 퓨전** 가능  
+
+- **다양한 클러스터링(AHC, HDBSCAN, Spectral) & 앙상블(DOVER-lap 등)**  
+  - AHC, HDBSCAN, Spectral Clustering 등 여러 알고리즘 결과를 **동시에** 얻고  
+  - 스코어 기반(score-level) 또는 **DOVER-lap** 방식으로 **최종 앙상블** 수행  
+
+- **추가 지표(Purity, NMI) 평가**  
+  - DER, JER(전통적 지표) 외에도 **Purity**, **NMI**와 같은 군집 품질 지표 제공  
+  - **화자 분할 성능**을 여러 각도에서 평가 가능  
+
+### 📚 Dependencies
+
+- Python 3.8+
+- PyTorch 1.12+
+- `pyannote.audio`, `speechbrain`, `openai-whisper`, `dover-lap`, `hdbscan`, `scikit-learn`, `librosa`, `soundfile`
+  
+  ```bash
+  pip install pyannote.audio speechbrain openai-whisper dover-lap hdbscan scikit-learn librosa soundfile
+  ```
+
+### ⚙️ 사용 방법
+
+1. **Config 파일 준비(옵션)**  
+   - `conf.yaml` 등의 설정 파일에서 VAD 모델, 임베딩 모델, 클러스터링 방법, Whisper ASR 사용 여부 등 **세부 파라미터**를 지정 가능합니다.
+
+2. **명령어 실행**  
+
+   ```bash
+   python main_custom_diarization.py --audio_path=audio.wav --config_path=conf.yaml
+   ```
+   - `audio.wav`에 대해 화자 분할 및 ASR 수행 후,  
+   - 결과 `asr_results.csv` 파일에 화자별 구간 및 인식된 텍스트가 저장됩니다.
+
+3. **RTTM 파일 및 메트릭 계산(옵션)**  
+   - `--config_path` 설정에 **reference_rttm** 경로가 지정되어 있다면, DER, JER, Purity, NMI 등 **평가 지표**가 로그로 출력됩니다.
 
 ---
 
@@ -62,5 +93,3 @@ python main_separation.py mixed_audio.wav clean_voice.wav
 1. 이 레포를 Fork 후 기능별로 새로운 브랜치를 만들어주세요.
 2. PR 전 로컬 환경에서 충분히 테스트해 주세요.
 3. PR을 보내시면 코드 리뷰 후 반영하겠습니다.
-
----
